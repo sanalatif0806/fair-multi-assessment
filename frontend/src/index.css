@@ -1032,3 +1032,11 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .endpoint-check--offline { background: #fee2e2; color: #b91c1c; }
 .endpoint-check--unreachable { background: #f1f5f9; color: #64748b; }
 .corpus-row__sparql--online::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 4px; border-radius: 50%; background: #16a34a; vertical-align: middle; }
+
+/* ── Site footer (only rendered when VITE_FOOTER_* settings are given) ───── */
+.app-footer {
+  margin-top: 48px; padding: 24px 16px 28px; text-align: center;
+  border-top: 1px solid var(--border); background: var(--bg-muted); color: var(--text-muted);
+}
+.app-footer__line { margin: 0 0 6px; font-size: 14px; }
+.app-footer__logo { width: 150px; max-width: 60vw; height: auto; margin-top: 10px; }

@@ -31,6 +31,10 @@ jobs:
       - run: npx vite build --base=./
         env:
           VITE_API_BASE_URL: ${{ vars.API_URL }}
+          VITE_FOOTER_AUTHORS: Maria Angela Pellegrino and Sana Latif
+          VITE_FOOTER_LOGO: footer-logo.png
+          VITE_FOOTER_LOGO_ALT: University of Salerno logo
+          VITE_FOOTER_LOGO_LINK: https://www.unisa.it
       - uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist

@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import SnapshotsPage from "./pages/SnapshotsPage";
 import MappingPage from "./pages/MappingPage";
 import SparqlPage from "./pages/SparqlPage";
+import Footer from "./components/Footer";
 import "./index.css";
 
 
@@ -69,6 +70,7 @@ export default function App() {
       {page === "snapshots" && <SnapshotsPage />}
       {page === "mapping" && <MappingPage />}
       {page === "sparql" && <SparqlPage />}
+      <Footer />
     </div>
   );
 }
