@@ -6,6 +6,8 @@ from typing import Optional
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 
+import db
+import dataset_links
 from aggregation import consensus as consensus_mod
 from mapping import unified_mapping
 
@@ -64,6 +66,16 @@ def _load() -> pd.DataFrame:
     global _df
     if _df is not None:
         return _df
+
+    if db.is_postgres_enabled():
+        try:
+            _df = db.load_dataframe_from_db()
+            return _df
+        except Exception:
+
+
+            pass
+
     pool_path = _POOL_CSV if _POOL_CSV.exists() else _LEGACY_BLOD_ONLY_CSV
     if not pool_path.exists():
         raise HTTPException(500, f"Corpus data not found at {_POOL_CSV}")
@@ -77,6 +89,52 @@ def _load() -> pd.DataFrame:
         pool["repository"] = None
     _df = pool
     return _df
+
+
+def invalidate() -> None:
+    """Drop the cached in-memory DataFrame so the next call to _load()
+    re-reads current storage -- called after the monthly ingestion job
+    (ingestion.py) appends newly-discovered, newly-assessed datasets."""
+    global _df
+    _df = None
+
+
+def append_rows_to_csv(rows: list[dict]) -> int:
+    """Append newly-ingested rows to the CSV corpus files, so the CSV path
+    stays a complete, self-sufficient mirror of the corpus even when
+    Postgres/GraphDB are also enabled (ingestion.py writes to all
+    configured backends, not just one). Returns the number of rows written
+    (0 if `rows` is empty)."""
+    if not rows:
+        return 0
+
+    pool_path = _POOL_CSV if _POOL_CSV.exists() else _LEGACY_BLOD_ONLY_CSV
+    existing_pool = pd.read_csv(pool_path) if pool_path.exists() else pd.DataFrame()
+    score_cols = [
+        "F_fuji", "A_fuji", "I_fuji", "R_fuji", "FAIR_fuji",
+        "F_fc", "A_fc", "I_fc", "R_fc", "FAIR_fc",
+        "F_kgh", "A_kgh", "I_kgh", "R_kgh", "FAIR_kgh",
+    ]
+    new_pool_rows = pd.DataFrame([
+        {"id": r["id"], "category": r.get("category") or "blod",
+         **{c: r.get(c) for c in score_cols}}
+        for r in rows
+    ]).astype({c: "float64" for c in score_cols})
+    if not existing_pool.empty:
+
+
+        new_pool_rows = new_pool_rows.reindex(columns=existing_pool.columns)
+    combined = pd.concat([existing_pool, new_pool_rows], ignore_index=True)
+    combined.to_csv(_POOL_CSV, index=False)
+
+    repo_rows = [{"id": r["id"], "repository": r["repository"]} for r in rows if r.get("repository")]
+    if repo_rows:
+        existing_repo = pd.read_csv(_REPO_CSV) if _REPO_CSV.exists() else pd.DataFrame(columns=["id", "repository"])
+        combined_repo = pd.concat([existing_repo, pd.DataFrame(repo_rows)], ignore_index=True)
+        combined_repo = combined_repo.drop_duplicates(subset="id", keep="last")
+        combined_repo.to_csv(_REPO_CSV, index=False)
+
+    return len(rows)
 
 
 def _load_raw(tool: str, category: str) -> Optional[pd.DataFrame]:
@@ -120,12 +178,18 @@ def _row_to_mapped_by_tool(row: pd.Series) -> dict:
 def _row_to_summary(row: pd.Series) -> dict:
     mapped_by_tool = _row_to_mapped_by_tool(row)
     cons = consensus_mod.compute_consensus(mapped_by_tool)
+    category = row.get("category") if pd.notna(row.get("category")) else None
+    links = dataset_links.get(row["id"], category)
     return {
         "id": row["id"],
-        "category": row.get("category") if pd.notna(row.get("category")) else None,
+        "category": category,
         "repository": row.get("repository") if pd.notna(row.get("repository")) else None,
         "tool_composites": {t: m.get("composite") for t, m in mapped_by_tool.items()},
         "consensus": cons,
+        "title": links["title"],
+        "sparql_endpoints": [e["url"] for e in links["sparql_endpoints"]],
+        "sparql_online": any(e.get("check") == "online" for e in links["sparql_endpoints"]),
+        "site_count": len({s["site"] for s in links["also_available_at"]}),
     }
 
 
@@ -170,6 +234,8 @@ async def corpus_datasets(
     repository: Optional[str] = Query(None, description="Filter by exact repository name"),
     min_consensus: Optional[float] = Query(None, ge=0, le=1),
     max_consensus: Optional[float] = Query(None, ge=0, le=1),
+    has_sparql: Optional[bool] = Query(None, description="true = only datasets with a SPARQL endpoint"),
+    sparql_online: Optional[bool] = Query(None, description="true = only datasets whose endpoint was online at the last KGHeartBeat check"),
     sort_by: str = Query("id", pattern="^(id|consensus)$"),
     sort_desc: bool = Query(False),
     page: int = Query(1, ge=1),
@@ -190,6 +256,11 @@ async def corpus_datasets(
         rows = [r for r in rows if r["consensus"].get("overall") is not None and r["consensus"]["overall"] >= min_consensus]
     if max_consensus is not None:
         rows = [r for r in rows if r["consensus"].get("overall") is not None and r["consensus"]["overall"] <= max_consensus]
+
+    if has_sparql is not None:
+        rows = [r for r in rows if bool(r["sparql_endpoints"]) == has_sparql]
+    if sparql_online:
+        rows = [r for r in rows if r["sparql_online"]]
 
     if sort_by == "consensus":
         rows.sort(key=lambda r: (r["consensus"].get("overall") is None, r["consensus"].get("overall") or 0), reverse=sort_desc)
@@ -223,7 +294,7 @@ def _dataset_url_for(dataset_id: str, category: str) -> Optional[str]:
     return None
 
 
-@router.get("/corpus/datasets/{dataset_id}")
+@router.get("/corpus/datasets/{dataset_id:path}")
 async def corpus_dataset_detail(
     dataset_id: str,
     category: Optional[str] = Query(
@@ -262,11 +333,50 @@ async def corpus_dataset_detail(
     mapped_by_tool = {t: r["mapped"] for t, r in tool_results.items()}
     cons = consensus_mod.compute_consensus(mapped_by_tool)
 
+    links = dataset_links.get(dataset_id, category)
     return {
         "input": {"type": "corpus", "value": dataset_id},
         "category": category,
         "repository": row.get("repository") if pd.notna(row.get("repository")) else None,
-        "dataset_url": _dataset_url_for(dataset_id, category),
+        "dataset_url": _dataset_url_for(dataset_id, category) or links["website"],
+        "title": links["title"],
+        "website": links["website"],
+        "sparql_endpoints": links["sparql_endpoints"],
+        "also_available_at": links["also_available_at"],
         "tool_results": tool_results,
         "consensus": cons,
     }
+
+
+@router.get("/corpus/sparql-endpoints")
+async def corpus_sparql_endpoints(
+    category: Optional[str] = Query(None, description="Restrict to one category"),
+    dataset_id: Optional[str] = Query(None, description="Return only this dataset"),
+):
+    """Every corpus dataset that has a SPARQL endpoint, with its endpoints,
+    per-tool FAIR scores, consensus and other websites listing it."""
+    df = _load()
+    if category:
+        df = df[df["category"] == category]
+    if dataset_id:
+        df = df[df["id"].str.lower() == dataset_id.lower()]
+    results = []
+    for _, row in df.iterrows():
+        cat = row.get("category") if pd.notna(row.get("category")) else "blod"
+        links = dataset_links.get(row["id"], cat)
+        if not links["sparql_endpoints"]:
+            continue
+        summary = _row_to_summary(row)
+        results.append({
+            "id": row["id"],
+            "category": cat,
+            "title": links["title"],
+            "sparql_endpoints": links["sparql_endpoints"],
+            "tool_composites": summary["tool_composites"],
+            "consensus": summary["consensus"].get("overall"),
+            "agreement": summary["consensus"].get("agreement"),
+            "website": links["website"],
+            "also_available_at": links["also_available_at"],
+        })
+    results.sort(key=lambda r: (r["category"], r["id"].lower()))
+    return {"total": len(results), "results": results}

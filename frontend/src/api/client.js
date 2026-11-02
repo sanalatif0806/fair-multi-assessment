@@ -42,11 +42,10 @@ export async function assessFileBatch(file, opts = {}) {
 }
 
 
-export async function explain(consensus, toolResults, geminiApiKey) {
+export async function explain(consensus, toolResults) {
   const { data } = await client.post("/explain", {
     consensus,
     tool_results: toolResults,
-    gemini_api_key: geminiApiKey || null,
   });
   return data;
 }

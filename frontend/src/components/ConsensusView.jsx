@@ -10,6 +10,8 @@ import {
   Tooltip,
 } from "recharts";
 import ChartDownloadButtons from "./ChartDownloadButtons";
+import ScoreValue from "./ScoreValue";
+import { scoreColor } from "../lib/scoreColor";
 
 const DIMENSIONS = ["F", "A", "I", "R"];
 const AGREEMENT_COLOR = { high: "#16a34a", medium: "#d97706", low: "#dc2626", single_tool: "#6b7280", insufficient_data: "#6b7280" };
@@ -54,7 +56,9 @@ export default function ConsensusView({ consensus }) {
 
       <div className="consensus-summary">
         <div className="consensus-summary__overall">
-          <span className="consensus-summary__value">{consensus.overall.toFixed(3)}</span>
+          <span className="consensus-summary__value" style={{ color: scoreColor(consensus.overall) }}>
+            {consensus.overall.toFixed(3)}
+          </span>
           <span className="consensus-summary__label">Overall FAIR score</span>
         </div>
         <AgreementBadge level={consensus.agreement} />
@@ -100,7 +104,7 @@ export default function ConsensusView({ consensus }) {
               return (
                 <tr key={dim}>
                   <td>{dim}</td>
-                  <td>{score != null ? score.toFixed(3) : "—"}</td>
+                  <td><ScoreValue score={score} /></td>
                   <td>{range != null ? `±${range.toFixed(3)}` : "—"}</td>
                   <td>{level ? <AgreementBadge level={level} /> : "—"}</td>
                 </tr>

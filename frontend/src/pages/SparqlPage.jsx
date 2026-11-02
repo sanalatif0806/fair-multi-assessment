@@ -12,7 +12,8 @@ LIMIT 20`;
 function datasetLookupQuery(id) {
   const escaped = id.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `PREFIX fair: <https://fair-multi-assessor.local/schema#>
-SELECT ?id ?category ?repository ?fuji ?fairchecker ?kgheartbeat ?consensusScore ?consensusAgreement WHERE {
+PREFIX void: <http://rdfs.org/ns/void#>
+SELECT ?id ?category ?repository ?fuji ?fairchecker ?kgheartbeat ?consensusScore ?consensusAgreement ?endpoint ?website WHERE {
   ?ds fair:id "${escaped}" ;
       fair:id ?id ;
       fair:category ?category .
@@ -22,6 +23,8 @@ SELECT ?id ?category ?repository ?fuji ?fairchecker ?kgheartbeat ?consensusScore
   OPTIONAL { ?ds fair:kgheartbeatComposite ?kgheartbeat }
   OPTIONAL { ?ds fair:consensusScore ?consensusScore }
   OPTIONAL { ?ds fair:consensusAgreement ?consensusAgreement }
+  OPTIONAL { ?ds void:sparqlEndpoint ?endpoint }
+  OPTIONAL { ?ds fair:website ?website }
 }`;
 }
 
@@ -58,11 +61,6 @@ export default function SparqlPage() {
     <div className="sparql-page">
       <header className="fair-results__header">
         <h1>SPARQL Endpoint</h1>
-        <p>
-          Query every dataset across all LOD sub-cloud categories and repositories with SPARQL 1.1 --
-          filter, aggregate, and sort on any combination of per-tool scores, consensus, category or
-          repository, then download the results as CSV.
-        </p>
       </header>
 
       <form className="sparql-lookup" onSubmit={lookupDataset}>
@@ -122,7 +120,15 @@ export default function SparqlPage() {
                     {result.rows.map((row, i) => (
                       <tr key={i}>
                         {row.map((val, j) => (
-                          <td key={j}>{val === "" ? "—" : val}</td>
+                          <td key={j}>
+                            {val === "" ? (
+                              "—"
+                            ) : /^https?:\/\/\S+$/.test(val) ? (
+                              <a href={val} target="_blank" rel="noreferrer">{val}</a>
+                            ) : (
+                              val
+                            )}
+                          </td>
                         ))}
                       </tr>
                     ))}

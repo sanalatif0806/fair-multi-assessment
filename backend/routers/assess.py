@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from mapping import unified_mapping
 from aggregation import consensus as consensus_mod
 from tools import fuji_client, fairchecker_client, kgheartbeat_client
+from dataset_url_guard import check_dataset_url, check_dataset_url_with_ai, InvalidDatasetUrlError
 
 router = APIRouter()
 
@@ -116,6 +117,10 @@ async def assess(
         if not url or not url.strip():
             raise HTTPException(400, "url is required when input_type='url'")
         target_id, target_url = url.strip(), url.strip()
+        try:
+            await asyncio.to_thread(check_dataset_url_with_ai, target_url)
+        except InvalidDatasetUrlError as e:
+            raise HTTPException(400, str(e))
         input_echo = {"type": "url", "value": url.strip()}
     else:
         if file is None:
@@ -125,6 +130,10 @@ async def assess(
         if not resources:
             raise HTTPException(400, "No resources found in the uploaded file")
         target_id, target_url = resources[0]["id"], resources[0]["url"]
+        try:
+            await asyncio.to_thread(check_dataset_url_with_ai, target_url)
+        except InvalidDatasetUrlError as e:
+            raise HTTPException(400, f"First resource in file ({target_id}): {e}")
         input_echo = {"type": "file", "value": file.filename, "resources_found": len(resources)}
 
     result = await _run_all_tools(
@@ -152,6 +161,16 @@ async def assess_batch(
 
     results = []
     for r in resources:
+
+
+        try:
+            check_dataset_url(r["url"])
+        except InvalidDatasetUrlError as e:
+            results.append({
+                "input": {"type": "file", "value": r["id"]},
+                "error": f"Skipped -- not a valid dataset URL: {e}",
+            })
+            continue
         one = await _run_all_tools(
             r["url"], r["id"],
             run_fuji=run_fuji, run_fairchecker=run_fairchecker, run_kgheartbeat=run_kgheartbeat,

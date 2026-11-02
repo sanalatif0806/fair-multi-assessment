@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import ChartDownloadButtons from "./ChartDownloadButtons";
+import ScoreValue from "./ScoreValue";
 
 const DIMENSIONS = ["F", "A", "I", "R"];
 const TOOL_COLORS = { fuji: "#2563eb", fairchecker: "#16a34a", kgheartbeat: "#d97706" };
@@ -57,7 +58,7 @@ export default function ToolScoreView({ toolResults }) {
                   const val = mapped?.dimension_scores?.[dim];
                   return (
                     <td key={t}>
-                      {err ? <span className="cell-error">error</span> : val != null ? val.toFixed(3) : "—"}
+                      {err ? <span className="cell-error">error</span> : <ScoreValue score={val} />}
                     </td>
                   );
                 })}
@@ -71,10 +72,8 @@ export default function ToolScoreView({ toolResults }) {
                   <td key={t}>
                     {mapped?.error ? (
                       <span className="cell-error">error</span>
-                    ) : mapped?.composite != null ? (
-                      mapped.composite.toFixed(3)
                     ) : (
-                      "—"
+                      <ScoreValue score={mapped?.composite} />
                     )}
                   </td>
                 );

@@ -14,7 +14,6 @@ export default function Dashboard() {
   const [progress, setProgress] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [tab, setTab] = useState("mapped");
-  const [geminiApiKey, setGeminiApiKey] = useState("");
 
   async function handleSubmit({ type, value, tools }) {
     setLoading(true);
@@ -65,7 +64,6 @@ export default function Dashboard() {
     <div className="dashboard">
       <header className="dashboard__header">
         <h1>Multi-Tool FAIR Assessment</h1>
-        <p>F-UJI · FAIR Checker · KG Heartbeat — mapped, native, and consensus views, with AI explanation.</p>
       </header>
 
       <InputPanel onSubmit={handleSubmit} loading={loading} />
@@ -102,22 +100,9 @@ export default function Dashboard() {
             {tab === "consensus" && <ConsensusView consensus={result.consensus} />}
           </div>
 
-          <div className="dashboard__gemini-key">
-            <label>
-              Gemini API key (optional — falls back to server default):
-              <input
-                type="password"
-                value={geminiApiKey}
-                onChange={(e) => setGeminiApiKey(e.target.value)}
-                placeholder="Leave blank to use server-configured key"
-              />
-            </label>
-          </div>
-
           <AIExplanation
             consensus={result.consensus}
             toolResults={result.tool_results}
-            geminiApiKey={geminiApiKey}
           />
 
           <div className="dashboard__export">

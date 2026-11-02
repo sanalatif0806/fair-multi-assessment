@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import { explain } from "../api/client";
 
 
-export default function AIExplanation({ consensus, toolResults, geminiApiKey }) {
+export default function AIExplanation({ consensus, toolResults }) {
   const [open, setOpen] = useState(true);
   const [text, setText] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ export default function AIExplanation({ consensus, toolResults, geminiApiKey }) 
     setLoading(true);
     setError("");
     try {
-      const data = await explain(consensus, toolResults, geminiApiKey);
+      const data = await explain(consensus, toolResults);
       setText(data.explanation);
     } catch (e) {
       setError(e?.response?.data?.detail || e.message || "Failed to generate explanation.");

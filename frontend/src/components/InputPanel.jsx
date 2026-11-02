@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { invalidDatasetUrlReason } from "../lib/datasetUrlGuard";
 
 
 export default function InputPanel({ onSubmit, loading }) {
@@ -31,6 +32,11 @@ export default function InputPanel({ onSubmit, loading }) {
     if (mode === "url") {
       if (!isValidUrl(url)) {
         setError("Please enter a valid http(s) URL.");
+        return;
+      }
+      const reason = invalidDatasetUrlReason(url);
+      if (reason) {
+        setError(reason);
         return;
       }
       onSubmit({ type: "url", value: url, tools: { runFuji, runFairchecker, runKgheartbeat } });
@@ -70,7 +76,7 @@ export default function InputPanel({ onSubmit, loading }) {
       {mode === "url" ? (
         <input
           type="text"
-          placeholder="https://example.org/dataset/123"
+          placeholder="https://your-repository.org/dataset/123 (a dataset link, not a generic site like wikidata.org or google.com)"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="input-panel__url"

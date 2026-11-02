@@ -26,6 +26,7 @@ def fetch_ols_catalog(page_size: int = 20) -> dict:
             {
                 "id": o.get("ontologyId"),
                 "title": o.get("config", {}).get("title"),
+                "description": o.get("config", {}).get("description"),
                 "homepage": o.get("config", {}).get("homepage"),
                 "numberOfTerms": o.get("numberOfTerms"),
             }
@@ -51,7 +52,12 @@ def fetch_obo_foundry_catalog(limit: int = 20) -> dict:
             {
                 "id": o.get("id"),
                 "title": o.get("title"),
+                "description": o.get("description"),
                 "homepage": o.get("homepage"),
+
+
+                "ontology_purl": o.get("ontology_purl"),
+                "domain": o.get("domain"),
                 "status": o.get("activity_status"),
             }
             for o in ontologies[:limit]
@@ -78,7 +84,7 @@ def query_wikidata(sparql: str) -> dict:
 def fetch_wikidata_biomedical_kg_count() -> dict:
     sparql = """
     SELECT (COUNT(?item) AS ?count) WHERE {
-      ?item wdt:P31/wdt:P279* wd:Q56111686 .  # instance of biomedical ontology (example)
+      ?item wdt:P31/wdt:P279* wd:Q56111686 .
     }
     """
     return query_wikidata(sparql)
@@ -262,6 +268,118 @@ def fetch_kaggle_catalog(username: Optional[str] = None, key: Optional[str] = No
         "implemented/tested this session -- wire in the `kaggle` package's "
         "datasets_list() here."
     )
+
+
+def fetch_ols_catalog_all(page_size: int = 200, max_pages: int = 20) -> list[dict]:
+    """Paginate through the full OLS ontology catalog (fetch_ols_catalog()
+    above only returns one page, sized for a quick preview). No API key --
+    OLS4 is a fully open EBI service. max_pages is a safety cap (OLS has
+    on the order of a few hundred ontologies, well under page_size*max_pages
+    at the defaults)."""
+    out = []
+    for page in range(max_pages):
+        resp = requests.get(
+            "https://www.ebi.ac.uk/ols4/api/ontologies",
+            params={"size": page_size, "page": page},
+            headers={"User-Agent": _UA},
+            timeout=_TIMEOUT,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        ontologies = data.get("_embedded", {}).get("ontologies", [])
+        if not ontologies:
+            break
+        for o in ontologies:
+            cfg = o.get("config", {}) or {}
+            out.append({
+                "id": o.get("ontologyId"),
+                "title": cfg.get("title"),
+                "description": cfg.get("description"),
+                "homepage": cfg.get("homepage"),
+                "file_location": cfg.get("fileLocation"),
+            })
+        total_pages = data.get("page", {}).get("totalPages")
+        if total_pages is not None and page + 1 >= total_pages:
+            break
+    return out
+
+
+def fetch_lod_cloud_full() -> dict:
+    """Like fetch_lod_cloud_catalog() but returns every entry's full raw
+    metadata dict rather than a size-limited, field-trimmed preview --
+    lod-data.json is one flat JSON file (not paginated), so "full" costs no
+    extra requests over the preview version. Still honors robots.txt."""
+    import urllib.robotparser
+
+    parser = urllib.robotparser.RobotFileParser()
+    parser.set_url("https://lod-cloud.net/robots.txt")
+    parser.read()
+
+    if not parser.can_fetch(_UA, _LOD_CLOUD_DATA_URL):
+        raise PermissionError(
+            "lod-cloud.net/robots.txt disallows fetching lod-data.json for "
+            f"this user-agent ({_UA!r}). Not working around it."
+        )
+
+    resp = requests.get(_LOD_CLOUD_DATA_URL, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    data = resp.json()
+    items = data if isinstance(data, dict) else {}
+    return {"source": "LOD Cloud", "total": len(items), "items": items}
+
+
+def search_github_repos_all(query: str, max_pages: int = 3, per_page: int = 100,
+                             token: Optional[str] = None) -> list[dict]:
+    """Paginate GitHub code search up to `max_pages` (default 300 repos).
+    No token required -- unauthenticated search works, just rate-limited to
+    10 req/min, which is why this is capped rather than exhausting GitHub's
+    own 1000-result search ceiling every run."""
+    headers = {"User-Agent": _UA, "Accept": "application/vnd.github+json"}
+    tok = token or os.environ.get("GITHUB_TOKEN")
+    if tok:
+        headers["Authorization"] = f"Bearer {tok}"
+
+    out = []
+    for page in range(1, max_pages + 1):
+        resp = requests.get(
+            "https://api.github.com/search/repositories",
+            params={"q": query, "per_page": per_page, "page": page},
+            headers=headers,
+            timeout=_TIMEOUT,
+        )
+        resp.raise_for_status()
+        items = resp.json().get("items", [])
+        if not items:
+            break
+        for r in items:
+            out.append({
+                "full_name": r.get("full_name"),
+                "html_url": r.get("html_url"),
+                "homepage": r.get("homepage"),
+                "description": r.get("description"),
+            })
+        if len(items) < per_page:
+            break
+    return out
+
+
+def query_ontobee_ontology_list() -> list[dict]:
+    """Best-effort discovery of Ontobee's ontology list via its SPARQL
+    endpoint. Ontobee has no documented flat "list all ontologies" REST
+    endpoint, so this queries for distinct named graphs, which is how
+    Ontobee organizes one ontology per graph -- confirmed against Ontobee's
+    own SPARQL documentation, not against a live response (see this
+    project's snapshots.list_sources(): this endpoint returned HTTP 403
+    from this development sandbox specifically; unconfirmed from a real
+    deployment with normal internet access)."""
+    sparql = "SELECT DISTINCT ?graph WHERE { GRAPH ?graph { ?s ?p ?o } } LIMIT 1000"
+    data = query_ontobee(sparql)
+    out = []
+    for row in data.get("rows", []):
+        graph_uri = row.get("graph", {}).get("value")
+        if graph_uri:
+            out.append({"id": graph_uri.rstrip("/").rsplit("/", 1)[-1], "url": graph_uri})
+    return out
 
 
 def fetch_bio2rdf_catalog() -> dict:

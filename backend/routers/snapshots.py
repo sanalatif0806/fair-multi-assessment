@@ -3,7 +3,6 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 
-import discovery
 import snapshots as snap
 
 router = APIRouter()
@@ -60,24 +59,3 @@ async def download_snapshot(filename: str):
         raise HTTPException(404, f"Snapshot '{filename}' not found")
     return FileResponse(path, media_type="application/zip", filename=filename)
 
-
-@router.post("/snapshots/run")
-async def run_snapshot():
-    path = snap.create_snapshot()
-    return {"created": path.name, "path": str(path)}
-
-
-@router.get("/snapshots/live-catalogs")
-async def live_catalogs():
-    results = {}
-    for name, fn, kwargs in [
-        ("OLS", discovery.fetch_ols_catalog, {}),
-        ("OBO Foundry", discovery.fetch_obo_foundry_catalog, {}),
-        ("GitHub", discovery.search_github_repos, {"query": "topic:knowledge-graph topic:biomedical"}),
-        ("LOD Cloud", discovery.fetch_lod_cloud_catalog, {}),
-    ]:
-        try:
-            results[name] = fn(**kwargs)
-        except Exception as e:
-            results[name] = {"error": f"{type(e).__name__}: {e}"}
-    return {"catalogs": results}

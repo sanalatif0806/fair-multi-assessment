@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchCorpusCategories, fetchCorpusSummary } from "../api/corpus";
 import { CATEGORY_LABELS, CATEGORY_ICONS } from "../lib/categories";
+import { scoreColor } from "../lib/scoreColor";
 
 
 export default function HomePage({ onSelectCategory }) {
@@ -68,17 +69,19 @@ export default function HomePage({ onSelectCategory }) {
               <span className="home-repo-card__count">{c.count.toLocaleString()} knowledge graphs</span>
 
               <span className="home-repo-card__score-row">
-                <span className="home-repo-card__score">{score != null ? score.toFixed(3) : "—"}</span>
+                <span className="home-repo-card__score" style={{ color: scoreColor(score) }}>
+                  {score != null ? score.toFixed(3) : "—"}
+                </span>
                 <small>FAIR composite score</small>
               </span>
               <span className="home-repo-slider">
                 <span
                   className="home-repo-slider__fill"
-                  style={{ width: animate ? `${pct}%` : "0%" }}
+                  style={{ width: animate ? `${pct}%` : "0%", backgroundColor: scoreColor(score) }}
                 />
                 <span
                   className="home-repo-slider__thumb"
-                  style={{ left: animate ? `${pct}%` : "0%" }}
+                  style={{ left: animate ? `${pct}%` : "0%", backgroundColor: scoreColor(score) }}
                 />
               </span>
             </button>
