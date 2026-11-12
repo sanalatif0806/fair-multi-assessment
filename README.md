@@ -5,6 +5,10 @@ FAIR tools — **F-UJI**, **FAIR-Checker**, **KGHeartBeat** — normalises their
 output onto a shared mapping, computes a cross-tool consensus, and generates
 an OpenAI-based plain-language explanation.
 
+## Demo
+
+🎥 [Watch the demo video](demo/FAIR_multi_assessor.webm)
+
 ## Run it (Docker — the standalone way)
 
 This is one app, three containers, one command:
