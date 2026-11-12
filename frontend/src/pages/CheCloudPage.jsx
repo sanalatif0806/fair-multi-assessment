@@ -1,18 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { fetchChecloudSummary, fetchChecloudDatasets, fetchChecloudDatasetDetail } from "../api/checloud";
 
-/**
- * CheCloudPage
- * ==============
- * Browse CheCLOUD (Cultural Heritage LOD Cloud) -- a sibling corpus to
- * BLOD from the same research group, 190 KGs, assessed by KGHeartBeat
- * ALONE (not three tools like BLOD). Deliberately a separate page rather
- * than folded into BlodCloudPage: the data shape is genuinely different
- * (single-tool dimension scores + full metric breakdown, no per-tool
- * composites, no cross-tool consensus to show), so reusing
- * ToolScoreView/ConsensusView here would mean forcing this shape into
- * components built for a different one.
- */
 export default function CheCloudPage() {
   const [summary, setSummary] = useState(null);
   const [rows, setRows] = useState([]);

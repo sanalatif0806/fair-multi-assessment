@@ -30,9 +30,6 @@ def _dataset_uri(dataset_id: str, category: str) -> URIRef:
 
 
 def _add_dataset_triples(g: Graph, row) -> None:
-    """Emit one dataset's triples into `g`. Shared by build_graph() (the
-    full in-memory rebuild) and graphdb_client.add_rows() (the incremental
-    push used by the monthly ingestion job), so the two never drift apart."""
     category = row.get("category") if pd.notna(row.get("category")) else "blod"
     dataset_id = row["id"]
     uri = _dataset_uri(dataset_id, category)
@@ -62,7 +59,6 @@ def _add_dataset_triples(g: Graph, row) -> None:
         g.add((uri, VOID.sparqlEndpoint, ep_uri))
         g.add((uri, FAIR.sparqlEndpoint, ep_uri))
         if ep.get("check"):
-            # KGHeartBeat's availability check for this endpoint
             g.add((ep_uri, FAIR.endpointStatus, Literal(ep["check"])))
             if ep.get("checked_on"):
                 g.add((ep_uri, FAIR.endpointCheckedOn, Literal(ep["checked_on"], datatype=XSD.date)))
@@ -84,9 +80,6 @@ def _add_dataset_triples(g: Graph, row) -> None:
 
 
 def graph_for_rows(rows) -> Graph:
-    """Build a standalone graph for just the given rows (a DataFrame or a
-    list of row-like mappings) -- used to push only the newly-ingested
-    datasets to GraphDB instead of re-serializing the whole corpus."""
     g = Graph()
     g.bind("fair", FAIR)
     g.bind("ds", DS)
@@ -98,9 +91,6 @@ def graph_for_rows(rows) -> Graph:
 
 
 def invalidate() -> None:
-    """Drop the cached in-memory graph so the next query rebuilds it from
-    the current corpus -- called after the monthly ingestion job appends
-    new datasets, same idea as corpus._df being reset."""
     global _graph
     _graph = None
 

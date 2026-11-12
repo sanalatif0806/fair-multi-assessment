@@ -1,12 +1,3 @@
-/**
- * api/checloud.js
- * ==================
- * Client for the CheCLOUD endpoints (/checloud/*). CheCLOUD is a separate
- * corpus from BLOD (cultural heritage KGs, KGHeartBeat-only assessment),
- * so this is a distinct client rather than reusing api/corpus.js -- the
- * response shapes are intentionally different (single-tool dimension
- * scores + full metric breakdown, no cross-tool consensus).
- */
 import client from "./client";
 
 export async function fetchChecloudSummary() {

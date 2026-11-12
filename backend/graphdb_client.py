@@ -33,14 +33,6 @@ def _has_any_triples() -> bool:
 
 
 def ensure_seeded(force: bool = False) -> int:
-    """Push the corpus into the GraphDB repository over the standard SPARQL
-    1.1 Graph Store / RDF4J statements endpoint, but only if it's currently
-    empty (or `force`). Returns the number of triples pushed (0 if skipped
-    because the repository already has data -- a restart isn't a re-import).
-
-    Deferred import of build_graph to avoid a circular import: sparql_endpoint
-    imports this module to decide whether to route queries here.
-    """
     if not is_enabled():
         raise RuntimeError("GRAPHDB_SPARQL_URL is not set -- GraphDB is disabled")
     if not force and _has_any_triples():
@@ -64,11 +56,6 @@ def ensure_seeded(force: bool = False) -> int:
 
 
 def add_rows(rows) -> int:
-    """Incrementally push just the given rows (a DataFrame or list of
-    row-like mappings) to GraphDB, without touching what's already there --
-    used by the monthly ingestion job so adding N new datasets doesn't
-    require re-uploading the whole corpus. Returns the number of triples
-    sent (0 if `rows` is empty or GraphDB isn't enabled)."""
     if not is_enabled():
         return 0
 
@@ -93,10 +80,6 @@ def add_rows(rows) -> int:
 
 
 def run_query(query: str) -> tuple[list[str], list[list[str]]]:
-    """Run a SPARQL query against the remote GraphDB repository over the
-    standard SPARQL 1.1 Protocol (SPARQL-results+JSON), returning the same
-    (columns, rows) shape as sparql_endpoint.run_query()'s in-memory path,
-    so routers/sparql.py doesn't need to know which backend answered it."""
     resp = requests.post(
         GRAPHDB_SPARQL_URL,
         data={"query": query},

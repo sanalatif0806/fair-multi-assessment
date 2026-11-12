@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from urllib.parse import urlparse
@@ -54,7 +53,7 @@ GENERIC_PATHS = {"", "/", "/about", "/about-us", "/contact", "/help",
 
 
 class InvalidDatasetUrlError(ValueError):
-    """Raised when a submitted URL is not an acceptable dataset URL."""
+    pass
 
 
 def _netloc_without_port(netloc: str) -> str:
@@ -62,11 +61,6 @@ def _netloc_without_port(netloc: str) -> str:
 
 
 def check_dataset_url(url: str) -> None:
-    """Raise InvalidDatasetUrlError if `url` is not an acceptable dataset URL.
-
-    Call this before invoking any FAIR assessment tool. It never mutates or
-    normalises the URL -- it only validates.
-    """
     if not url or not url.strip():
         raise InvalidDatasetUrlError("A dataset URL is required.")
 
@@ -120,25 +114,6 @@ def check_dataset_url_with_ai(
     api_key: Optional[str] = None,
     model: Optional[str] = None,
 ) -> Optional[dict]:
-    """Run the fast static check_dataset_url() first, then -- only if that
-    passes and a Gemini API key is configured -- ask an LLM for a second
-    opinion on whether the URL really looks like a dataset resource.
-
-    This catches cases the static blocklist can't anticipate (an unknown
-    blog, a company marketing page, a software project's README, etc. that
-    isn't on any blocklist but obviously isn't a dataset either), without
-    having to hand-enumerate every non-dataset site on the internet.
-
-    Returns the AI classifier's result dict (see gemini_url_classifier) for
-    visibility/logging, or None if the AI layer was skipped (no API key
-    configured, or the package isn't installed) -- in which case the static
-    check above is the only gate, same graceful-degradation pattern as this
-    app's other optional Gemini integrations. Raises InvalidDatasetUrlError
-    if either the static check fails, or the AI check comes back with a
-    confident "not a dataset" verdict. A model error/timeout/quota hit
-    (is_dataset=None) fails open -- it never blocks a request just because
-    the AI layer was unreachable.
-    """
     check_dataset_url(url)
 
     result = gemini_url_classifier.classify_dataset_url(

@@ -86,18 +86,6 @@ def categorize(
     api_key: Optional[str] = None,
     model: str = DEFAULT_MODEL,
 ) -> dict:
-    """Classify one discovered dataset into this app's fixed category set
-    using Gemini, the same way this project's own BLOD/CHe-CLOUD research
-    used GPT-4o-mini to decide a dataset's domain from its title and
-    description (see Blod/src/lodcloud_filter.py's filter_with_gpt()).
-
-    Returns {"category": <slug>, "reasoning": <str>, "error": <str or None>}.
-    On any failure (no package, no key, bad response, network error), falls
-    back to `default_category` (or "cross-domain" if that's also unset) and
-    reports why in "error" -- callers decide whether that's good enough,
-    same graceful-degradation pattern as the rest of this app's optional
-    integrations (Postgres, GraphDB, Gemini explanations).
-    """
     fallback = default_category or "cross-domain"
 
     if genai is None:

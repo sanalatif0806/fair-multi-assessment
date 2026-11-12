@@ -32,9 +32,6 @@ KEY_FREE_SOURCES = ["obo-foundry", "ols", "lod-cloud", "github"]
 
 
 def _str(v) -> str:
-    """Coerce a metadata field that might be a plain string, a list of
-    strings, or a {lang: text} dict (all of which show up across these
-    catalogs) into one plain string for the classifier prompt."""
     if v is None:
         return ""
     if isinstance(v, str):
@@ -162,11 +159,6 @@ _SOURCE_FUNCS = {
 
 
 def discover_candidates(sources: Optional[list[str]] = None) -> list[dict]:
-    """Pull candidate datasets from every key-free source (or a subset, via
-    `sources`), tagging each with which source found it. A failure in one
-    source (network error, catalog format drift, etc.) is logged and
-    skipped rather than aborting the whole discovery pass -- matches this
-    app's existing pattern in routers/snapshots.py's /snapshots/live-catalogs."""
     wanted = sources or KEY_FREE_SOURCES
     candidates = []
     for name in wanted:
@@ -186,9 +178,6 @@ def _existing_ids() -> set:
 
 
 def filter_new(candidates: list[dict]) -> list[dict]:
-    """Drop candidates already present in the corpus and de-duplicate
-    within this run's own results (the same dataset can surface from more
-    than one source)."""
     existing = _existing_ids()
     seen = set()
     out = []
@@ -203,26 +192,6 @@ def filter_new(candidates: list[dict]) -> list[dict]:
 
 
 def classify_candidates(candidates: list[dict]) -> dict:
-    """Resolve each new candidate's final corpus category, tagging BLOD
-    (biomedical/health) data as "blod" and everything else into whichever
-    existing category actually fits -- the automated version of this
-    project's own BLOD/CHe-CLOUD research methodology (manual annotation +
-    a GPT-4o-mini classifier over title/description; see the uploaded
-    Blod/src/lodcloud_filter.py), with Gemini standing in for GPT-4o-mini.
-
-    A LOD Cloud entry whose own metadata already gives an unambiguous
-    domain (government, geography, media, etc.) skips the LLM call
-    entirely and uses that directly -- mirrors the original pipeline's
-    layered approach of trusting structured metadata before falling back
-    to an LLM, and only spending a Gemini call where metadata alone can't
-    decide (notably: every "life_sciences"-domain entry and every
-    non-LOD-Cloud source, since those registries carry no domain field of
-    their own and easily mix in non-biomedical ontologies/repos).
-
-    Mutates and returns `candidates` with "category" resolved; also adds
-    "category_source" ("metadata" or "gemini") and, when Gemini ran,
-    "category_reasoning" -- useful for the ingestion snapshot's audit trail.
-    """
     counts = {"metadata": 0, "gemini": 0, "gemini_fallback": 0}
     for c in candidates:
         if not c.get("needs_classification", True):
@@ -265,21 +234,11 @@ def _tool_results_to_row(candidate: dict, tool_results: dict) -> dict:
 
 
 async def assess_candidate(candidate: dict) -> dict:
-    """Run the same three-tool assessment /assess uses for a manually
-    submitted URL, against one discovered candidate, and shape the result
-    as a corpus row."""
     result = await _run_all_tools(candidate["url"], candidate["id"])
     return _tool_results_to_row(candidate, result["tool_results"])
 
 
 async def run_monthly_ingestion(now: Optional[datetime] = None) -> dict:
-    """The monthly job: discover datasets from every key-free source, keep
-    only the ones not already in the corpus, assess each with F-UJI +
-    FAIR-Checker + KGHeartBeat, and write the results into every storage
-    backend that's active (CSV always; Postgres and/or GraphDB too when
-    configured) -- then archive what happened as a snapshot, same as the
-    existing monthly corpus snapshot.
-    """
     now = now or datetime.now(timezone.utc)
     started = now.isoformat()
 

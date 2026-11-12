@@ -109,4 +109,5 @@ are then averaged step by step, from metric to principle to dimension (F, A,
 I, R) to an overall FAIR score. The consensus compares the tools' mapped
 scores and rates their agreement as high, medium or low depending on how
 far apart they are. The code lives in `backend/mapping/` and
-`aggregation/consensus.py`.
+`aggregation/consensus.py`, and you can explore the full mapping and
+formulas in the [online tool](https://sanalatif0806.github.io/fair-multi-assessment/).

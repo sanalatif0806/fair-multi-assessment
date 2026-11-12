@@ -1,20 +1,3 @@
-"""Source selection for federated querying.
-
-GET /federated/select returns the SPARQL endpoints of corpus datasets that meet
-a FAIR-score threshold, best first, so a federated query engine (for example a
-federated RAG pipeline building retrieval context from live knowledge graphs)
-can pick which endpoints to query.
-
-Selection is driven by the FAIR score: datasets below `min_fair_score` (and
-below any per-principle minimum, min_f / min_a / min_i / min_r) are dropped,
-and results are ranked by FAIR score, highest first. `keywords` only narrows
-the candidates to a topic (title, description or keywords mention it); it never
-changes the order.
-
-Each endpoint is returned once, under its highest-scoring dataset: several
-datasets share one endpoint (e.g. the Bio2RDF or Ontobee stores), and querying
-the same endpoint twice would only duplicate results.
-"""
 from __future__ import annotations
 
 import re
@@ -30,7 +13,6 @@ router = APIRouter()
 
 
 def _term_pattern(term: str) -> re.Pattern:
-    """Whole-word match, tolerant of a plural 's' (drug -> drugs)."""
     words = [re.escape(w) for w in term.lower().split()]
     return re.compile(r"\b" + r"\s+".join(words) + r"s?\b")
 
@@ -38,8 +20,6 @@ SCORE_FIELDS = ("consensus", "fuji", "fairchecker", "kgheartbeat")
 
 
 def _dimension_scores(row, summary, score: str) -> dict:
-    """F/A/I/R scores for the chosen score: the cross-tool consensus per
-    principle, or one tool's own per-principle scores."""
     if score == "consensus":
         return dict(summary["consensus"].get("by_dimension") or {})
     from routers.corpus import TOOL_COLUMNS

@@ -45,17 +45,6 @@ def classify_dataset_url(
     api_key: Optional[str] = None,
     model: str = DEFAULT_MODEL,
 ) -> dict:
-    """Ask Gemini whether `url` looks like a dataset resource.
-
-    Returns {"is_dataset": True/False/None, "reasoning": <str or None>,
-    "error": <str or None>}. `is_dataset` is None whenever the model
-    couldn't be reached (no package, no key, quota hit, bad response, etc.)
-    -- callers should treat None as "inconclusive" and fail open (same
-    graceful-degradation pattern as this app's other optional Gemini
-    integrations: explanations and dataset categorization), since this AI
-    check is a second-opinion layer on top of the static blocklist in
-    dataset_url_guard.py, not the only gate.
-    """
     if genai is None:
         return {"is_dataset": None, "reasoning": None,
                 "error": "google-genai package not installed"}

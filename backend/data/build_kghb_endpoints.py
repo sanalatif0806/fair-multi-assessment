@@ -1,27 +1,3 @@
-"""
-build_kghb_endpoints.py
-=======================
-Extracts the SPARQL endpoint of every knowledge graph from a KGHeartBeat
-analysis snapshot (the daily CSV, e.g. 2026-06-07.csv) into the small file
-data/kghb_sparql_endpoints.csv that the backend reads.
-
-KGHeartBeat records, per KG:
-  "SPARQL endpoint URL"  the endpoint declared in the KG's metadata
-  "Sparql endpoint"      its check result: "Available", "offline", or "-"
-                         ("-" with a URL means the check could not reach it)
-
-Output columns: id, endpoint_url, status (online | offline | unreachable), checked_on
-
-It also writes data/kghb_metadata.csv (id, name, description) from the same
-snapshot, used for topic search in /federated/select for datasets that are not
-in BLOD.json.
-
-Only URLs that look like SPARQL endpoints are kept, unless KGHeartBeat found
-them online (declared endpoints sometimes point at web pages or documents).
-
-Usage (from backend/):
-    python data/build_kghb_endpoints.py /path/to/2026-06-07.csv
-"""
 from __future__ import annotations
 
 import argparse

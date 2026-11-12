@@ -92,19 +92,11 @@ def _load() -> pd.DataFrame:
 
 
 def invalidate() -> None:
-    """Drop the cached in-memory DataFrame so the next call to _load()
-    re-reads current storage -- called after the monthly ingestion job
-    (ingestion.py) appends newly-discovered, newly-assessed datasets."""
     global _df
     _df = None
 
 
 def append_rows_to_csv(rows: list[dict]) -> int:
-    """Append newly-ingested rows to the CSV corpus files, so the CSV path
-    stays a complete, self-sufficient mirror of the corpus even when
-    Postgres/GraphDB are also enabled (ingestion.py writes to all
-    configured backends, not just one). Returns the number of rows written
-    (0 if `rows` is empty)."""
     if not rows:
         return 0
 
@@ -353,8 +345,6 @@ async def corpus_sparql_endpoints(
     category: Optional[str] = Query(None, description="Restrict to one category"),
     dataset_id: Optional[str] = Query(None, description="Return only this dataset"),
 ):
-    """Every corpus dataset that has a SPARQL endpoint, with its endpoints,
-    per-tool FAIR scores, consensus and other websites listing it."""
     df = _load()
     if category:
         df = df[df["category"] == category]

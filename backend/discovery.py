@@ -271,11 +271,6 @@ def fetch_kaggle_catalog(username: Optional[str] = None, key: Optional[str] = No
 
 
 def fetch_ols_catalog_all(page_size: int = 200, max_pages: int = 20) -> list[dict]:
-    """Paginate through the full OLS ontology catalog (fetch_ols_catalog()
-    above only returns one page, sized for a quick preview). No API key --
-    OLS4 is a fully open EBI service. max_pages is a safety cap (OLS has
-    on the order of a few hundred ontologies, well under page_size*max_pages
-    at the defaults)."""
     out = []
     for page in range(max_pages):
         resp = requests.get(
@@ -305,10 +300,6 @@ def fetch_ols_catalog_all(page_size: int = 200, max_pages: int = 20) -> list[dic
 
 
 def fetch_lod_cloud_full() -> dict:
-    """Like fetch_lod_cloud_catalog() but returns every entry's full raw
-    metadata dict rather than a size-limited, field-trimmed preview --
-    lod-data.json is one flat JSON file (not paginated), so "full" costs no
-    extra requests over the preview version. Still honors robots.txt."""
     import urllib.robotparser
 
     parser = urllib.robotparser.RobotFileParser()
@@ -330,10 +321,6 @@ def fetch_lod_cloud_full() -> dict:
 
 def search_github_repos_all(query: str, max_pages: int = 3, per_page: int = 100,
                              token: Optional[str] = None) -> list[dict]:
-    """Paginate GitHub code search up to `max_pages` (default 300 repos).
-    No token required -- unauthenticated search works, just rate-limited to
-    10 req/min, which is why this is capped rather than exhausting GitHub's
-    own 1000-result search ceiling every run."""
     headers = {"User-Agent": _UA, "Accept": "application/vnd.github+json"}
     tok = token or os.environ.get("GITHUB_TOKEN")
     if tok:
@@ -364,14 +351,6 @@ def search_github_repos_all(query: str, max_pages: int = 3, per_page: int = 100,
 
 
 def query_ontobee_ontology_list() -> list[dict]:
-    """Best-effort discovery of Ontobee's ontology list via its SPARQL
-    endpoint. Ontobee has no documented flat "list all ontologies" REST
-    endpoint, so this queries for distinct named graphs, which is how
-    Ontobee organizes one ontology per graph -- confirmed against Ontobee's
-    own SPARQL documentation, not against a live response (see this
-    project's snapshots.list_sources(): this endpoint returned HTTP 403
-    from this development sandbox specifically; unconfirmed from a real
-    deployment with normal internet access)."""
     sparql = "SELECT DISTINCT ?graph WHERE { GRAPH ?graph { ?s ?p ?o } } LIMIT 1000"
     data = query_ontobee(sparql)
     out = []

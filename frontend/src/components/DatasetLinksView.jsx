@@ -3,14 +3,8 @@ import ScoreValue from "./ScoreValue";
 const TOOL_LABELS = { fuji: "F-UJI", fairchecker: "FAIR Checker", kgheartbeat: "KG Heartbeat" };
 const CHECK_LABELS = { online: "Online", offline: "Offline", unreachable: "Unreachable" };
 
-// The "BLOD page" link is hidden for now; the link data is kept in the API.
-// To show it again, build the frontend with VITE_SHOW_BLOD_PAGE_LINK=true.
 const SHOW_BLOD_PAGE_LINK = import.meta.env.VITE_SHOW_BLOD_PAGE_LINK === "true";
 
-/**
- * Dataset access panel on the FAIR score page: the per-tool FAIR scores next to the
- * dataset link and every SPARQL endpoint that serves it.
- */
 export default function DatasetLinksView({ detail }) {
   const endpoints = detail?.sparql_endpoints || [];
   const mapped = Object.fromEntries(

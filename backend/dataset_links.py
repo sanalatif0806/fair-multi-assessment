@@ -1,21 +1,3 @@
-"""SPARQL endpoints, website and BLOD page for each corpus dataset, read directly
-from the BLOD catalogue file data/BLOD.json (the enriched BLOD export, whose
-records carry `sparql`, `website`, `fair_page` and `also_available_at`).
-
-Corpus ids are matched to BLOD records case-insensitively ("bao" -> "BAO"); for
-the blod category a punctuation-insensitive match is tried as a fallback
-("ido;_vido;_cido" -> "IDO, VIDO, CIDO"). Datasets in other LOD sub-clouds are
-only matched on an exact (case-insensitive) id.
-
-SPARQL endpoints are also taken from data/kghb_sparql_endpoints.csv, extracted
-from a KGHeartBeat analysis snapshot by data/build_kghb_endpoints.py. That file
-covers every LOD sub-cloud, not just BLOD, and records whether KGHeartBeat found
-each endpoint online on the snapshot date. Each endpoint returned here carries:
-  url, title, description, sources (["BLOD"], ["KGHeartBeat"] or both),
-  check ("online" | "offline" | "unreachable" | None if never checked), checked_on
-
-Replace either file and restart the backend (or call invalidate()) to refresh.
-"""
 from __future__ import annotations
 
 import csv
@@ -117,9 +99,6 @@ def invalidate() -> None:
 
 
 def topic_text(dataset_id: str, category: Optional[str] = None) -> str:
-    """Lower-cased searchable text for a dataset: id, title, description and
-    keywords from BLOD.json, plus the name and description KGHeartBeat records.
-    Used for topic search in /federated/select."""
     by_lower = _load()
     cat = category or "blod"
     key = (cat, dataset_id)
@@ -165,7 +144,6 @@ def get(dataset_id: str, category: Optional[str] = None) -> dict:
                       "check": k["check"], "checked_on": k["checked_on"]}
                 links["sparql_endpoints"].append(ep)
                 by_url[_url_key(k["url"])] = ep
-        # endpoints KGHeartBeat found online first
         links["sparql_endpoints"].sort(key=lambda e: {"online": 0, None: 1}.get(e["check"], 2))
         _cache[key] = links
     return _cache[key]

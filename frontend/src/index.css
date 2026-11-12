@@ -27,7 +27,6 @@ body {
 
 h1, h2, h3 { letter-spacing: -0.01em; }
 
-
 .app-bg-blobs {
   position: fixed;
   inset: 0;
@@ -92,7 +91,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 
 .dashboard__header h1 { margin-bottom: 4px; }
 .dashboard__header p { color: var(--text-muted); margin-top: 0; }
-
 
 .input-panel {
   background: var(--surface);
@@ -220,7 +218,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 
 .chart-wrap { margin: 16px 0; }
 
-
 .consensus-summary {
   display: flex;
   align-items: center;
@@ -251,7 +248,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   text-transform: capitalize;
   white-space: nowrap;
 }
-
 
 .ai-explanation {
   background: var(--surface);
@@ -303,7 +299,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   font-size: 14px;
 }
 .dashboard__export button:hover { border-color: var(--accent); color: var(--accent); }
-
 
 .app-nav {
   display: flex;
@@ -365,7 +360,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   font-weight: 600;
 }
 
-
 .fair-results {
   max-width: 1280px;
   margin: 0 auto;
@@ -409,7 +403,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 }
 .fair-results__layout--collapsed { gap: 0; }
 
-
 .fair-sidebar__toggle {
   flex-shrink: 0;
   width: 26px;
@@ -427,7 +420,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 .fair-sidebar__toggle:hover { border-color: var(--accent); color: var(--accent-dark); }
-
 
 .fair-sidebar {
   width: 260px;
@@ -556,7 +548,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   vertical-align: middle;
 }
 
-
 .dataset-detail { max-width: 960px; margin: 0 auto; }
 .dataset-detail__back {
   display: inline-flex;
@@ -628,7 +619,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   .fair-sidebar__section { display: contents; }
   .fair-sidebar__title { width: 100%; }
 }
-
 
 .home-page { max-width: 1100px; margin: 0 auto; padding: 48px 20px 80px; position: relative; }
 .home-page__hero { text-align: center; margin-bottom: 40px; position: relative; z-index: 1; }
@@ -722,7 +712,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .home-repo-card__score { font-size: 22px; font-weight: 800; color: var(--accent-dark); }
 .home-repo-card__score-row small { font-size: 11px; font-weight: 500; color: var(--text-muted); }
 
-
 .home-repo-slider {
   position: relative;
   width: 100%;
@@ -773,7 +762,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   box-shadow: 0 0 0 5px var(--accent-soft), var(--shadow-sm);
 }
 
-
 .dataset-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
@@ -820,7 +808,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   white-space: nowrap;
 }
 
-
 .chart-download {
   display: flex;
   align-items: center;
@@ -841,7 +828,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .chart-download__btn:disabled { opacity: 0.5; cursor: wait; }
 .chart-download__error { font-size: 12px; color: #dc2626; }
 
-
 .metric-detail-toggle { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
 .metric-detail-toggle__btn {
   padding: 7px 12px;
@@ -856,7 +842,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .metric-detail-toggle__btn:hover { border-color: var(--accent); color: var(--accent-dark); }
 .metric-detail-toggle__btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
 .cell-error { color: #dc2626; font-size: 12px; }
-
 
 .sparql-page { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; }
 .sparql-lookup {
@@ -987,15 +972,11 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   .sparql-sidebar { width: 100%; }
 }
 
-
 @media print {
   .input-panel, .dashboard__tabs, .dashboard__gemini-key, .dashboard__export,
   .ai-explanation__generate { display: none !important; }
   body { background: white; }
 }
-
-
-/* ── Dataset access: FAIR scores and SPARQL endpoints ───────── */
 .dataset-detail__title { margin: -4px 0 10px; color: var(--text-muted); font-size: 15px; }
 .dataset-links__scores { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 18px; }
 .dataset-links__score {
@@ -1032,8 +1013,6 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .endpoint-check--offline { background: #fee2e2; color: #b91c1c; }
 .endpoint-check--unreachable { background: #f1f5f9; color: #64748b; }
 .corpus-row__sparql--online::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 4px; border-radius: 50%; background: #16a34a; vertical-align: middle; }
-
-/* ── Site footer (only rendered when VITE_FOOTER_* settings are given) ───── */
 .app-footer {
   margin-top: 48px; padding: 24px 16px 28px; text-align: center;
   border-top: 1px solid var(--border); background: var(--bg-muted); color: var(--text-muted);
