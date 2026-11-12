@@ -7,6 +7,8 @@ an OpenAI-based plain-language explanation.
 
 ## Demo
 
+🌐 [Try the tool online](https://sanalatif0806.github.io/fair-multi-assessment/)
+
 🎥 [Watch the demo video](demo/FAIR_multi_assessor.webm)
 
 ## Run it (Docker — the standalone way)
