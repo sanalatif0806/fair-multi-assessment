@@ -1,9 +1,11 @@
 # FAIR Multi-Assessor
 
-A web application that assesses a research resource with three independent
-FAIR tools — **F-UJI**, **FAIR-Checker**, **KGHeartBeat** — normalises their
-output onto a shared mapping, computes a cross-tool consensus, and generates
-an AI-based plain-language explanation.
+How FAIR is a dataset? The answer often depends on which tool you ask.
+FAIR Multi-Assessor runs three well-known FAIR assessment tools, **F-UJI**,
+**FAIR-Checker** and **KGHeartBeat**, on the same resource, brings their
+results onto a common scale, and shows you where they agree and where they
+don't. It also writes a short plain-language explanation of the results, so
+you don't have to interpret every metric yourself.
 
 ## Demo
 
@@ -11,47 +13,52 @@ an AI-based plain-language explanation.
 
 🎥 [Watch the demo video](demo/FAIR_multi_assessor.webm)
 
-## Features
+## What you can do
 
-- **LOD Cloud** — browse precomputed three-tool FAIR assessments of 2,784
-  knowledge graphs across all 11 LOD sub-cloud categories (BLOD, che-cloud,
-  life-sciences, linguistic, government, publications, social-networking,
-  cross-domain, user-generated, geography, media), filterable by category or
-  by BLOD source repository (Bio2RDF, BioPortal, GitHub, Wikidata, OBO
-  Foundry, OLS, Ontobee, and more). Each entry expands to per-metric
-  detail, consensus, and an AI explanation.
-- **New Assessment** — run the three tools live against a URL or an uploaded
-  CSV/JSON file.
-- **Snapshots** — dated, downloadable `.zip` archives of the corpus
-  assessment, generated monthly or on demand.
-- **FAIR Mapping** — reference page showing which metric of each tool
-  contributes to each FAIR sub-principle, and the formulas used to compute
-  the F/A/I/R/FAIR composite and the consensus.
+**Explore the LOD Cloud.** We have already assessed 2,784 knowledge graphs
+from all 11 LOD sub-clouds (BLOD, che-cloud, life sciences, linguistics,
+government, publications and more) with all three tools. You can filter by
+category, or by source repository for BLOD (Bio2RDF, BioPortal, GitHub,
+Wikidata, OBO Foundry, OLS, Ontobee and others), and open any graph to see
+its scores, how much the tools agree, and an explanation.
 
-Results can be viewed in three modes — **Mapped** (unified 0–1 scale),
-**Native** (each tool's own score), and **Consensus** (cross-tool agreement
-per dimension) — and exported as JSON or PDF.
+**Assess your own resource.** Paste a URL or upload a CSV/JSON file and the
+three tools will run on it live.
 
-## Quick start (Docker)
+**Download snapshots.** A dated archive of the full assessment is created
+every month, and you can also create one whenever you like.
+
+**See how the scores are built.** The FAIR Mapping page shows which metric
+from each tool feeds into each FAIR principle, along with the formulas
+behind the final scores.
+
+You can look at the results in three ways: on a shared 0–1 scale, as each
+tool's original score, or as a consensus view showing how closely the tools
+agree. Results can be exported as JSON or PDF.
+
+## Getting started
+
+The easiest way to run it is with Docker:
 
 ```bash
-cp .env.example .env   # add OPENAI_API_KEY to enable AI explanations
+cp .env.example .env   # add your OPENAI_API_KEY to turn on explanations
 docker compose up --build
 ```
 
-Then open **http://localhost**. This starts three containers:
+Then open **http://localhost** in your browser. Docker starts three
+containers:
 
-| Container | Description | Port |
+| Container | What it does | Port |
 |---|---|---|
-| `fuji` | Official F-UJI server image | `1071` |
-| `backend` | FastAPI app | `8000` |
-| `frontend` | React app served by nginx (proxies API calls to the backend) | `80` |
+| `fuji` | The official F-UJI server | `1071` |
+| `backend` | The FastAPI backend | `8000` |
+| `frontend` | The React interface, served by nginx | `80` |
 
-Stop with `docker compose down`.
+When you're done, run `docker compose down`.
 
-## Manual setup
+### Running without Docker
 
-**Backend**
+Start the backend:
 
 ```bash
 cd backend
@@ -60,7 +67,7 @@ cp .env.example .env   # OPENAI_API_KEY, FUJI_API_URL, etc.
 uvicorn main:app --reload --port 8000
 ```
 
-**Frontend**
+Then the frontend, in a second terminal:
 
 ```bash
 cd frontend
@@ -69,35 +76,36 @@ cp .env.example .env.local   # set VITE_API_BASE_URL if not localhost:8000
 npm run dev
 ```
 
-## Tool configuration
+## Setting up the tools
 
-| Tool | Setup |
-|---|---|
-| **FAIR-Checker** | Public API — no setup needed. |
-| **F-UJI** | Requires a running F-UJI server (included in Docker), configured via `FUJI_API_URL` / `FUJI_USER` / `FUJI_PASSWORD`. |
-| **KGHeartBeat** | Requires a self-hosted endpoint set in `KGHEARTBEAT_API_URL`; otherwise reported as "not assessed". |
+- **FAIR-Checker** works out of the box through its public API.
+- **F-UJI** needs a running F-UJI server. Docker includes one; otherwise set
+  `FUJI_API_URL`, `FUJI_USER` and `FUJI_PASSWORD`.
+- **KGHeartBeat** needs your own endpoint, set in `KGHEARTBEAT_API_URL`.
+  Without it, KGHeartBeat results show as "not assessed".
 
-If a tool is unavailable, the other tools still run and its result is shown
-as an error rather than a zero score.
+If one tool is down, the others still run, and you'll see a clear message
+instead of a misleading zero score.
 
 ## API
 
-| Endpoint | Description |
+| Endpoint | What it does |
 |---|---|
-| `GET /health` | Health check |
-| `POST /assess` | Assess a single URL or file |
-| `POST /assess/batch` | Assess every row of an uploaded CSV/JSON |
-| `POST /explain` | Generate an AI explanation of a result |
-| `GET /corpus/*` | Precomputed LOD Cloud assessments |
-| `GET /snapshots/*` | Snapshot archives and data-source status |
-| `GET /mapping/reference` | FAIR mapping and formulas |
+| `GET /health` | Checks that the backend is running |
+| `POST /assess` | Assesses a single URL or file |
+| `POST /assess/batch` | Assesses every row of a CSV/JSON file |
+| `POST /explain` | Writes an explanation of a result |
+| `GET /corpus/*` | Returns the precomputed LOD Cloud assessments |
+| `GET /snapshots/*` | Lists and downloads snapshots |
+| `GET /mapping/reference` | Returns the FAIR mapping and formulas |
 
-Interactive API docs are available at `/docs`.
+You can try the endpoints interactively at `/docs`.
 
-## Mapping and consensus
+## How the scores are combined
 
-Each tool's metrics are mapped to FAIR sub-principles and aggregated
-(metric → principle → dimension → composite, unweighted mean at each step)
-in `backend/mapping/`. The cross-tool consensus (`aggregation/consensus.py`)
-is computed on mapped scores only and labels agreement as `high`, `medium`,
-or `low` based on how far the tools' scores spread apart.
+Each tool's metrics are mapped to the FAIR principles they measure. Scores
+are then averaged step by step, from metric to principle to dimension (F, A,
+I, R) to an overall FAIR score. The consensus compares the tools' mapped
+scores and rates their agreement as high, medium or low depending on how
+far apart they are. The code lives in `backend/mapping/` and
+`aggregation/consensus.py`.
