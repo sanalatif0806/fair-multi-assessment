@@ -15,9 +15,10 @@ you don't have to interpret every metric yourself.
 
 ## What you can do
 
-**Explore the LOD Cloud.** We have already assessed 2,784 knowledge graphs
-from all 11 LOD sub-clouds (BLOD, che-cloud, life sciences, linguistics,
-government, publications and more) with all three tools. You can filter by
+**Explore the LOD Cloud.** The tool comes with ready-made assessments of
+2,784 knowledge graphs from all 11 LOD sub-clouds (BLOD, che-cloud, life
+sciences, linguistics, government, publications and more), each scored by
+all three tools. You can filter by
 category, or by source repository for BLOD (Bio2RDF, BioPortal, GitHub,
 Wikidata, OBO Foundry, OLS, Ontobee and others), and open any graph to see
 its scores, how much the tools agree, and an explanation.
